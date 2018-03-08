@@ -9,6 +9,10 @@
     "test": "jest --coverage",
     "lint": "eslint ./index.js"
   },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/macprog-guy/shout.git"
+  },
   "author": "Eric Methot <em@ericmethot.com>",
   "license": "MIT",
   "description": "Fast, small and dependency-free javascript publish/subscribe (event-bus) for the browser or nodejs",
