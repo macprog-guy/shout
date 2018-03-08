@@ -10,12 +10,11 @@ A fast, small and dependency free publish subscribe event-bus for the browser an
 * unit tests & 100% coverage
 
 # How fast?
-Very fast! 3 million validation/sec (on Intel i7-4770K, Node.JS: 6.10.0)
 ```
-√ validate with pre-compiled schema x 3,052,280 ops/sec ±0.82% (93 runs sampled)
+TODO: run the benchmarks...
 ```
 
-**Would you like to test it?**
+Would you like to test it?
 
 ```
 $ git clone https://github.com/macprog-guy/shout.git
