@@ -40,25 +40,25 @@ About 2 KB compressed.
 ## Installation
 You can install it via [NPM](http://npmjs.org/).
 ```
-$ npm install shoutjs --save
+$ npm install subcast --save
 ```
 or 
 ```
-$ yarn add shoutjs
+$ yarn add subcast
 ```
 
 ## Example Usage
 
 ```js
-const shout = require('shoutjs')()
+const topics = require('subcast')()
 
-shout('foo')
+topics('foo')
   .subscribe(console.log)
   .publish('Hello World!')
   .publish('Hello again')
   .unsubscribe()
 
-shout('foo')
+topics('foo')
   .use((message, meta, next) => { 
     console.log('foo:', message)
     next(message, meta)
@@ -73,7 +73,7 @@ shout('foo')
   .publish('hello') // foo: hello + bar: hello
   .clear()
 
-shout('some-topic')
+topics('some-topic')
   .once(console.log)
   .publish('hello')   // hello
   .publish('goodbye') // no output
@@ -81,16 +81,16 @@ shout('some-topic')
 ```
 
 
-## `shout`
+## `Subcast`
 Constructor for accessing topics, which are created on the fly if necessary.
 Topics can be nested and each have their own list of subscribers and middleware.
 
 ```js
 // Creates three nested topics each with it's list of subscribers and middleware.
-const fooBarBazTopic = shout('foo.bar.baz')
+const fooBarBazTopic = topics('foo.bar.baz')
 
 // A subscription to the root topic will get called for all published messages.
-const rootTopic = shout()
+const rootTopic = topics()
 ```
 ### Arguments
 Parameter | Default     | Description
@@ -106,7 +106,7 @@ The callback will be called for publications on this topic as well as all subtop
 
 ```js
 // Creates three nested topics each with it's list of subscribers and middleware.
-shout('foo.bar.baz')
+topics('foo.bar.baz')
   .subscribe((message, meta) => { /* do something  */ })
 ```
 ### Arguments
@@ -121,7 +121,7 @@ Similar to subscribe but will automatically unsubscribe after having received th
 
 ```js
 // Creates three nested topics each with it's list of subscribers and middleware.
-shout('foo.bar.baz')
+topics('foo.bar.baz')
   .subscribeOnce((message, meta) => { /* do something  */ })
 ```
 ### Arguments
@@ -138,7 +138,7 @@ The function returns the topic and upon return all subscribers will have
 received the message.
 ```js
 // Creates three nested topics each with it's list of subscribers and middleware.
-shout('foo.bar.baz')
+topics('foo.bar.baz')
   .publishSync({cmd:'do-this', with:'that'})
 ```
 ### Arguments
@@ -154,7 +154,7 @@ The function returns the topic subscribers will have not have received the messa
 The messages will be received during the next event loop.
 ```js
 // Creates three nested topics each with it's list of subscribers and middleware.
-shout('foo.bar.baz')
+topics('foo.bar.baz')
   .publishAsync({cmd:'do-this', with:'that'})
 ```
 ### Arguments
@@ -171,7 +171,7 @@ subscribers are unregistered.
 
 ```js
 // Creates three nested topics each with it's list of subscribers and middleware.
-shout('foo.bar.baz')
+topics('foo.bar.baz')
   .unsubscribe(fooBarBazMessageHandler1, fooBarBazMessageHandler2)
 ```
 ### Arguments
@@ -186,7 +186,7 @@ all subscripitions.
 
 ```js
 // Creates three nested topics each with it's list of subscribers and middleware.
-shout('foo.bar.baz')
+topics('foo.bar.baz')
   .clear()
 ```
 ### Arguments
@@ -201,8 +201,8 @@ From an existing topic, returns a subtopic with the given name
 
 ```js
 // Creates three nested topics each with it's list of subscribers and middleware.
-// This is equivalent to shout('foo.bar.baz')
-shout('foo')
+// This is equivalent to topics('foo.bar.baz')
+topics('foo')
   .subtopic('bar')
     .subtopic('baz')
 ```
@@ -216,7 +216,7 @@ Parameter | Default     | Description
 Returns the parent topic or the root topic if no parent exists.
 
 ```js
-shout('foo')
+topics('foo')
   .subtopic('bar')
   .pop()  
 ```
@@ -229,7 +229,7 @@ Middleware functions get called in the order that they are added and from parent
 
 ```js
 // Creates three nested topics each with it's list of subscribers and middleware.
-shout('foo')
+topics('foo')
   .use((message, meta, next) =>{ 
      // Do something...
      next(message, meta)
@@ -249,7 +249,7 @@ Unregisters a middleware function from the topic.
 
 ```js
 // Creates three nested topics each with it's list of subscribers and middleware.
-shout('foo')
+topics('foo')
   .unuse(myMiddleware)
 ```
 ### Arguments
@@ -265,5 +265,5 @@ Parameter | Default     | Description
 Please send pull requests improving the usage and fixing bugs, improving documentation and providing better examples, or providing some testing, because these things are important.
 
 ## License
-shout is available under the [MIT license](https://tldrlegal.com/license/mit-license).
+topics is available under the [MIT license](https://tldrlegal.com/license/mit-license).
 
