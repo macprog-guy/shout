@@ -3,6 +3,10 @@
 /* global module, setTimeout */
 module.exports = Topic
 
+
+const SLOW_POST_THRESHOLD = 16,
+      NULL_POST = () => {}
+
 function Topic() {
   return makeContext('').topic
 }
@@ -40,8 +44,9 @@ function makeContext(name, parent) {
   context.postSync = postSync.bind(context)
   context.postAsync = postAsync.bind(context)
   context.topic = makeTopic(context,path)
+  
   context.recomputeMiddlewareSubtree()
- 
+
   return context
 }
 
@@ -130,8 +135,6 @@ function recomputeMiddlewareSubtree(wares) {
 
   for (let child of Object.values(this.children))
     child.recomputeMiddlewareSubtree(wares)
-
-  return this.topic
 }
 
 
@@ -164,6 +167,7 @@ function composeMiddleware(wares) {
 }
 
 
+
 // ----------------------------------------------------------------------------
 //
 // PRIVATE
@@ -177,21 +181,44 @@ function post(payload, meta) {
 }
 
 
+
 // ----------------------------------------------------------------------------
 //
 // PRIVATE
 //
-// Actually loops through the subscribers (both "once" and "regular") and  
-// calls the subscriptions immediately. 
+// When the number of subscribers grows, we don't use function composition 
+// anymore. Instead, we just loop through the subscribers and call each one 
+// in turn. 
 //
 // ----------------------------------------------------------------------------
+
+// function composeSubscribers(callbacks) {
+
+//   if (callbacks.length === 0)
+//     return () => {}
+
+//   let n = callbacks.length,
+//       f = callbacks[n-1]
+
+//   for (let i=1;  i<n;  i++) {
+//     let callback = callbacks[n-i-1],
+//         next = f
+//     f = (payload, meta, path) => {
+//       callback(payload, meta, path)
+//       next(payload, meta, path)
+//     }
+//   }
+
+//   return f
+// }
+
 
 function postSync(payload, meta) {
 
   let context = this
 
   while (context) {
-
+    
     const 
       parent = context.parent, 
       once   = context.once, 
@@ -214,6 +241,7 @@ function postSync(payload, meta) {
     context = parent
   }
 }
+
 
 // ----------------------------------------------------------------------------
 //
@@ -251,7 +279,6 @@ function postAsync(payload, meta) {
     
     context = parent
   }
-  return this.topic
 }
 
 
@@ -277,14 +304,13 @@ function pop() {
   return this.parent && this.parent.topic || this.topic
 }
 
-function subscribe(...callbacks) {
+function subscribe(...callbacks) {  
   this.subscriptions.push(...callbacks)
   return this.topic
 }
 
 function subscribeOnce(...callbacks) {
   this.once.push(...callbacks)
-  this.hasOnce = true
   return this.topic
 }
 

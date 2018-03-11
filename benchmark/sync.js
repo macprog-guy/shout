@@ -17,7 +17,9 @@ const Benchmarkify = require('benchmarkify'),
 const bench = benchmark.createSuite("Synchronous cases")
 
 
-const identityWare = (payload, meta, next) => { next(payload, meta) }
+const nullMiddleware = (payload, meta, next) => { next(payload, meta) },
+      nullSubscriber = () => {}
+
 
 
 // ------------------------------------------------------------------------
@@ -40,7 +42,7 @@ function notify() {
 }
 
 const object = { value: 1 }
-object.observers = [() => {}]
+object.observers = [nullSubscriber]
 object.notify = notify.bind(object) 
 
 
@@ -56,7 +58,7 @@ bench.add('Direct observer callback', () => {
 // ------------------------------------------------------------------------
 
 const topics1 = Shout()
-topics1.subscribe(() => {})
+topics1.subscribe(nullSubscriber)
 
 bench.add('Publish to the root topic with one subscriber', () => {
   topics1.publishSync('hello')
@@ -70,7 +72,7 @@ bench.add('Publish to the root topic with one subscriber', () => {
 // ------------------------------------------------------------------------
 
 const topics2   = Shout(),
-      subtopic2 = topics2('foo.bar.baz').subscribe(() => {})
+      subtopic2 = topics2('foo.bar.baz').subscribe(nullSubscriber)
 
 bench.add('Publishing to a nested topic with one subscriber', () => {
   subtopic2.publishSync('hello')
@@ -85,11 +87,11 @@ bench.add('Publishing to a nested topic with one subscriber', () => {
 
 const topics3   = Shout(),
       subtopic3 = topics3('foo')
-                    .subscribe(() => {})
+                    .subscribe(nullSubscriber)
                     .subtopic('bar')
-                      .subscribe(() => {})
+                      .subscribe(nullSubscriber)
                       .subtopic('baz')
-                        .subscribe(() => {})
+                        .subscribe(nullSubscriber)
 
 bench.add('Publishing to a nested topic with subscribers on topic chain', () => {
   subtopic3.publishSync('hello')
@@ -105,14 +107,14 @@ bench.add('Publishing to a nested topic with subscribers on topic chain', () => 
 
 const topics4   = Shout(),
       subtopic4 = topics3('foo')
-                    .use(identityWare)
-                    .subscribe(() => {})
+                    .use(nullMiddleware)
+                    .subscribe(nullSubscriber)
                     .subtopic('bar')
-                      .use(identityWare)
-                      .subscribe(() => {})
+                      .use(nullMiddleware)
+                      .subscribe(nullSubscriber)
                       .subtopic('baz')
-                        .use(identityWare)
-                        .subscribe(() => {})
+                        .use(nullMiddleware)
+                        .subscribe(nullSubscriber)
 
 bench.add('Publishing to a nested topic with subscribers and middleware on topic chain', () => {
   subtopic4.publishSync('hello')

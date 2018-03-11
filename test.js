@@ -1,5 +1,6 @@
 const Topic = require('./index.js')
 
+
 function accumulator() {
   const calls = [],
         func  = (p, meta, path) => calls.push(path)

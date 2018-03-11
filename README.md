@@ -1,4 +1,4 @@
-# Shout 
+# Subcast 
 A fast, small and dependency free publish subscribe event-bus for the browser and nodejs.
 
 ## Key features
