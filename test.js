@@ -1,10 +1,10 @@
 const Topic = require('./index.js')
 
-function counter(payload, meta) {
-  let counts = {},
-      func   = (payload, meta) => counts[meta.path] = (counts[meta.path] || 0) + 1
+function accumulator() {
+  const calls = [],
+        func  = (p, meta, path) => calls.push(path)
 
-  func.value = () => counts
+  func.value = () => calls
   
   return func
 }
@@ -12,172 +12,271 @@ function counter(payload, meta) {
 
 test('It should subscribe and receive messages', () => {
 
-  const count = counter(),
+  const accu  = accumulator(),
         topic = Topic()
 
   topic('foo')
-    .subscribe(count)
-    .publish('hello')
-    .publish('world')
+    .subscribe(accu)
+    .publishSync('hello')
+    .publishSync('world')
 
-  expect(count.value()).toEqual({foo:2})
+  expect(accu.value()).toEqual(['foo','foo'])
 })
 
-test('It should publish to all parent topics', () => {
 
-  const count = counter(),
+test('It should publish to the topic then to all parent topics', () => {
+
+  const accu  = accumulator(),
         topic = Topic()
 
   topic('foo')
-    .subscribe(count)
+    .subscribe(accu)
+    .subtopic('bar')
 
   topic('foo.bar')
-    .subscribe(count)
+    .subscribe(accu)
 
   topic('foo.bar.baz')
-    .subscribe(count)
-    .publish('hello')
-    .publish('world')
+    .subscribe(accu)
+    .publishSync('hello')
+    .publishSync('world')
 
-  expect(count.value()).toEqual({
-    'foo':2, 
-    'foo.bar':2, 
-    'foo.bar.baz':2
-  })
+  expect(accu.value()).toEqual([
+    'foo.bar.baz', 'foo.bar', 'foo',
+    'foo.bar.baz', 'foo.bar', 'foo',
+  ])
 })
 
 test('It should not publish to subtopics', () => {
 
-  const count = counter(),
+  const accu  = accumulator(),
         topic = Topic()
 
   topic('foo')
-    .subscribe(count)
-    .publish('x')
+    .subscribe(accu)
     .subtopic('bar')
-    .subscribe(count)
-    .publish('y')
-    .subtopic('baz')
-    .subscribe(count)
-    .publish('z')
+      .subscribe(accu)
+      .subtopic('baz')
+        .subscribe(accu)
 
-  expect(count.value()).toEqual({
-    'foo':3, 
-    'foo.bar':2, 
-    'foo.bar.baz':1
-  })
+  topic('foo')
+    .publishSync('x')
+    .subtopic('bar')
+      .publishSync('y')
+      .subtopic('baz')
+        .publishSync('z')
+
+
+  expect(accu.value()).toEqual([
+    'foo', 
+    'foo.bar','foo',
+    'foo.bar.baz','foo.bar','foo'
+  ])
 })
 
+test('It should publish asynchronously to the topic and all parent topics', done => {
 
-test('It should unsubscribe a callback', () => {
-
-  const count = counter(),
+  const accu  = accumulator(),
         topic = Topic()
 
   topic('foo')
-    .subscribe(count)
-    .publish('x')
-    .unsubscribe(count)
-    .publish('y')
+    .subscribe(accu)
 
-  expect(count.value()).toEqual({'foo':1})
+  topic('foo.bar')
+    .subscribe(accu)
+
+  topic('foo.bar.baz')
+    .subscribe(accu)
+    .publishAsync('hello')
+    .publishAsync('world')
+
+  setTimeout(() => {
+    expect(accu.value()).toEqual([
+      'foo.bar.baz', 'foo.bar', 'foo',
+      'foo.bar.baz', 'foo.bar', 'foo',
+    ])
+    done()
+  }, 200)
+
+  expect(accu.value()).toEqual([])
 })
 
-test('It should unsubscribe all callbacks', () => {
 
-  const count1 = counter(),
-        count2 = counter()
+
+test('It should unsubscribe only the specified callback', () => {
+
+  const accu1 = accumulator(),
+        accu2 = accumulator(),
+        topic = Topic()
+
+  topic('foo')
+    .subscribe(accu1)
+    .subscribe(accu2)
+    .publishSync('x')
+    .unsubscribe(accu2)
+    .publishSync('y')
+
+  expect(accu1.value()).toEqual(['foo','foo'])
+  expect(accu2.value()).toEqual(['foo'])
+})
+
+test('It should unsubscribe only the specified once-callback', () => {
+
+  const accu1 = accumulator(),
+        accu2 = accumulator(),
         topic  = Topic()
 
   topic('foo')
-    .subscribe(count1)
-    .subscribe(count2)
-    .publish('x')
-    .unsubscribe()
-    .publish('y')
+    .once(accu1)
+    .once(accu2)
+    .unsubscribe(accu2)
+    .publishSync('x')
+    .publishSync('y')
 
-  expect(count1.value()).toEqual({'foo':1})
-  expect(count2.value()).toEqual({'foo':1})
+  expect(accu1.value()).toEqual(['foo'])
+  expect(accu2.value()).toEqual([])
+})
+
+
+
+test('It should unsubscribe all callbacks', () => {
+
+  const accu1 = accumulator(),
+        accu2 = accumulator()
+        topic = Topic()
+
+  topic('foo')
+    .subscribe(accu1)
+    .once(accu2)
+    .unsubscribe()
+    .publishSync('x')
+
+  expect(accu1.value()).toEqual([])
+  expect(accu2.value()).toEqual([])
 })
 
 
 test('It should clear all subscriptions recursively', () => {
 
-  const count = counter(),
+  const accu  = accumulator(),
         topic = Topic()
 
-  topic('foo')
-    .subscribe(count)
-    .subtopic('bar')
-    .subscribe(count)
-    .subtopic('baz')
-    .subscribe(count)
-    .publish('x')
+  const topicFooBarBaz = 
+    topic('foo')
+      .subscribe(accu)
+      .subtopic('bar')
+        .subscribe(accu)
+      .subtopic('baz')
+        .subscribe(accu)
+        .publishSync('x')
 
-  expect(count.value()).toEqual({'foo':1, 'foo.bar':1, 'foo.bar.baz':1})
+  expect(accu.value()).toEqual(['foo.bar.baz','foo.bar','foo'])
 
   topic.clear()
-  topic('foo.bar.baz').publish('y')
+  topicFooBarBaz.publishSync('y')
 
-  expect(count.value()).toEqual({'foo':1, 'foo.bar':1, 'foo.bar.baz':1})
+  expect(accu.value()).toEqual(['foo.bar.baz','foo.bar','foo'])
 })
 
 test('It should receive only one message', () => {
 
-  const count = counter(),
+  const accu = accumulator(),
         topic = Topic()
 
   topic('foo')
-    .once(count)
-    .publish('hello')
-    .publish('world')
+    .once(accu)
+    .publishSync('hello')
+    .publishSync('world')
 
-  expect(count.value()).toEqual({foo:1})
+  expect(accu.value()).toEqual(['foo'])
 })
 
 
 test('It should return the parent topic or root topic', () => {
 
-  const count = counter(),
-        topic = Topic()
+  const topic = Topic()
 
-  topic('foo.bar')
-    .subscribe(count)
-    .pop()    
-    .publish('hello')
+  const topicRoot = topic.pop()
 
-  expect(count.value()).toEqual({})
+  const topicFoo = 
+    topic('foo.bar').pop()    
+
+  expect(topicRoot.path).toBe('')
+  expect(topicFoo.path).toBe('foo')
 })
 
 test('It should use the middleware on the topic and subtopics', () => {
 
   const wareCalls = [],
         ware1 = (message, meta, next) => (wareCalls.push(1), next(message, meta)),
-        ware2 = (message, meta, next) => (wareCalls.push(2), next(message, meta))
+        ware2 = (message, meta, next) => (wareCalls.push(2), next(message, meta)),
+        topic = Topic()
 
   topic
     .use(ware1, ware2)
-    .publish('x')
+    .publishSync('x')
     .subtopic('foo')
-    .publish('y')
+      .publishSync('y')
 
   expect(wareCalls).toEqual([1,2,1,2])
 })
 
 
-test('It should not use subtopic middleware', () => {
+test('It should not apply suptopic middleware', () => {
 
   const wareCalls = [],
         ware1 = (message, meta, next) => (wareCalls.push(1), next(message, meta)),
-        ware2 = (message, meta, next) => (wareCalls.push(2), next(message, meta))
+        ware2 = (message, meta, next) => (wareCalls.push(2), next(message, meta)),
+        topic = Topic()
 
   topic
     .use(ware1)
     .subtopic('foo')
-    .use(ware2)
-    .publish('y')
-    //.pop()
-    //.publish('x')
+      .use(ware2)
+      .publishSync('y')
+      .pop()
+    .publishSync('x')
 
-  expect(wareCalls).toEqual([1,2])
+  expect(wareCalls).toEqual([1,2,1])
+})
+
+
+test('It should remove the specified middleware and still apply subtopic middleware', () => {
+
+  const wareCalls = [],
+        ware1 = (message, meta, next) => (message+='*', wareCalls.push(message), next(message, meta)),
+        ware2 = (message, meta, next) => (message+='*', wareCalls.push(message), next(message, meta)),
+        topic = Topic()
+
+  topic
+    .use(ware1)
+    .subtopic('foo')
+      .use(ware2)
+      .publishSync('x')
+      .pop()
+    .unuse(ware1)
+    .subtopic('foo')
+      .publishSync('y')
+
+
+  expect(wareCalls).toEqual(['x*','x**','y*'])
+})
+
+
+test('It should only remove the specified middleware and leave other topic middleware in place', () => {
+
+  const wareCalls = [],
+        ware1 = (message, meta, next) => (message+='*', wareCalls.push(message), next(message, meta)),
+        ware2 = (message, meta, next) => (message+='*', wareCalls.push(message), next(message, meta)),
+        topic = Topic()
+
+  topic
+    .use(ware1)
+    .use(ware2)
+    .unuse(ware1)
+    .subtopic('foo')
+    .publishSync('x')
+
+
+  expect(wareCalls).toEqual(['x*'])
 })

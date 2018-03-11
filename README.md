@@ -3,7 +3,7 @@ A fast, small and dependency free publish subscribe event-bus for the browser an
 
 ## Key features
 * fast! really!
-* supports middleware per topic
+* middleware per topic or subtopic
 * nested topics using dot notation
 * chainable function calls
 * no dependencies
@@ -11,37 +11,46 @@ A fast, small and dependency free publish subscribe event-bus for the browser an
 
 # How fast?
 ```
-TODO: run the benchmarks...
-```
+Platform info:
+==============
+   Darwin 17.2.0 x64
+   Node.JS: 9.5.0
+   V8: 6.2.414.46-node.18
+   Intel(R) Core(TM) i7-4850HQ CPU @ 2.30GHz × 8
 
-Would you like to test it?
+Suite: Synchronous cases
+✔ Direct observer callback                                                           82,763,345 rps
+✔ Publish to the root topic with one subscriber                                      33,304,908 rps
+✔ Publishing to a nested topic with one subscriber                                   19,653,191 rps
+✔ Publishing to a nested topic with subscribers on topic chain                        8,622,035 rps
+✔ Publishing to a nested topic with subscribers and middleware on topic chain         8,557,189 rps
 
+Suite: Asynchronous cases
+✔ Direct observer callback                                                            3,283,436 rps
+✔ Publish to the root topic with one subscriber                                       1,519,615 rps
+✔ Publishing to a nested topic with one subscriber                                    1,412,452 rps
+✔ Publishing to a nested topic with subscribers on topic chain                          294,109 rps
+✔ Publishing to a nested topic with subscribers and middleware on topic chain           306,311 rps
 ```
-$ git clone https://github.com/macprog-guy/shout.git
-$ cd shout
-$ npm install
-$ npm run bench
-```
-
 
 # How small?
-About 1.5K compressed.
+About 2 KB compressed.
 
 
 ## Installation
 You can install it via [NPM](http://npmjs.org/).
 ```
-$ npm install shout --save
+$ npm install shoutjs --save
 ```
 or 
 ```
-$ yarn add shout
+$ yarn add shoutjs
 ```
 
 ## Example Usage
 
 ```js
-const shout = require('shout')()
+const shout = require('shoutjs')()
 
 shout('foo')
   .subscribe(console.log)
@@ -122,20 +131,37 @@ Parameter | Default     | Description
 
 
 
-## `publish`
-Publishes a message to a topic and all it's parent topics.
-The message will go through all of the middleware first start from the root
-going down to the topic before being posted back up the chain.
+## `publishSync`
+Publishes a message synchronously to a topic and all it's parent topics.
 
+The function returns the topic and upon return all subscribers will have
+received the message.
 ```js
 // Creates three nested topics each with it's list of subscribers and middleware.
 shout('foo.bar.baz')
-  .publish({cmd:'do-this', with:'that'})
+  .publishSync({cmd:'do-this', with:'that'})
 ```
 ### Arguments
 Parameter | Default     | Description
 -------- | ----------- | -----------
 `message`   | `Any` | The message get posted as-is unless modified by middleware functions
+
+
+## `publishAsync`
+Publishes a message asynchronously to a topic and all it's parent topics.
+
+The function returns the topic subscribers will have not have received the message.
+The messages will be received during the next event loop.
+```js
+// Creates three nested topics each with it's list of subscribers and middleware.
+shout('foo.bar.baz')
+  .publishAsync({cmd:'do-this', with:'that'})
+```
+### Arguments
+Parameter | Default     | Description
+-------- | ----------- | -----------
+`message`   | `Any` | The message get posted as-is unless modified by middleware functions
+
 
 
 
@@ -151,11 +177,11 @@ shout('foo.bar.baz')
 ### Arguments
 Parameter | Default     | Description
 -------- | ----------- | -----------
-`callbacks`   |  | If `undefined` will unsubscribe all subscribers otherwise only those listed in the callback list.
+`callbacks`   |  | If `undefined` will unsubscribe all subscribers from the topic otherwise only those that were specified.
 
 
 ## `clear`
-Unregisters all callers from a topic and all its subtopics also. Calling this on the root topic will clear
+Unregisters all callers from a topic and its subtopics. Calling this on the root topic will clear
 all subscripitions.
 
 ```js
@@ -178,7 +204,7 @@ From an existing topic, returns a subtopic with the given name
 // This is equivalent to shout('foo.bar.baz')
 shout('foo')
   .subtopic('bar')
-  .subtopic('baz')
+    .subtopic('baz')
 ```
 ### Arguments
 Parameter | Default     | Description
