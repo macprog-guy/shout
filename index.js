@@ -192,27 +192,6 @@ function post(payload, meta) {
 //
 // ----------------------------------------------------------------------------
 
-// function composeSubscribers(callbacks) {
-
-//   if (callbacks.length === 0)
-//     return () => {}
-
-//   let n = callbacks.length,
-//       f = callbacks[n-1]
-
-//   for (let i=1;  i<n;  i++) {
-//     let callback = callbacks[n-i-1],
-//         next = f
-//     f = (payload, meta, path) => {
-//       callback(payload, meta, path)
-//       next(payload, meta, path)
-//     }
-//   }
-
-//   return f
-// }
-
-
 function postSync(payload, meta) {
 
   let context = this
@@ -245,7 +224,7 @@ function postSync(payload, meta) {
 
 // ----------------------------------------------------------------------------
 //
-// PRIVATE
+// PRIVATE (NOT USED)
 //
 // Actually loops through the subscribers (both "once" and "regular") and  
 // will call the subscriptions in the next event loop by way of setTimeout. 
@@ -315,14 +294,13 @@ function subscribeOnce(...callbacks) {
 }
 
 function publishAsync(payload) {
-  setTimeout(() => {
-    const meta = {
-      contextId:    this.counter++,
-      originalPath: this.path,
-      async:        true
-    }
-    this.middleware(payload, meta)
-  }, 0)
+  const meta = {
+    contextId:    this.counter++,
+    originalPath: this.path,
+    async:        false
+  }
+  setTimeout(() => this.middleware(payload, meta), 0)
+  //this.middleware(payload, meta)
   return this.topic
 }
 

@@ -26,11 +26,11 @@ Suite: Synchronous cases
 ✔ Publishing to a nested topic with subscribers and middleware on topic chain         8,557,189 rps
 
 Suite: Asynchronous cases
-✔ Direct observer callback                                                            3,283,436 rps
-✔ Publish to the root topic with one subscriber                                       1,519,615 rps
-✔ Publishing to a nested topic with one subscriber                                    1,412,452 rps
-✔ Publishing to a nested topic with subscribers on topic chain                          294,109 rps
-✔ Publishing to a nested topic with subscribers and middleware on topic chain           306,311 rps
+✔ Direct observer callback                                                            3,495,022 rps
+✔ Publish to the root topic with one subscriber                                       2,768,843 rps
+✔ Publishing to a nested topic with one subscriber                                    2,654,318 rps
+✔ Publishing to a nested topic with subscribers on topic chain                        2,283,484 rps
+✔ Publishing to a nested topic with subscribers and middleware on topic chain         2,300,750 rps
 ```
 
 # How small?

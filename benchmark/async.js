@@ -35,8 +35,10 @@ function notify() {
         n = o.length,
         v = this.value
 
-  for (let i=0;  i<n;  i++)
-    setTimeout(() => {  o[i](this, v) }, 0)
+  setTimeout(() => {
+    for (let i=0;  i<n;  i++)
+      o[i](this, v)
+  })
 }
 
 const object = { value: 1 }
