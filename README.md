@@ -19,18 +19,18 @@ Platform info:
    Intel(R) Core(TM) i7-4850HQ CPU @ 2.30GHz × 8
 
 Suite: Synchronous cases
-✔ Direct observer callback                                                           82,763,345 rps
-✔ Publish to the root topic with one subscriber                                      33,304,908 rps
-✔ Publishing to a nested topic with one subscriber                                   19,653,191 rps
-✔ Publishing to a nested topic with subscribers on topic chain                        8,622,035 rps
-✔ Publishing to a nested topic with subscribers and middleware on topic chain         8,557,189 rps
+✔ Direct observer callback                                                        82,763,345 rps
+✔ Publish to the root topic with one subscriber                                   33,304,908 rps
+✔ Publish to a nested topic with one subscriber                                   19,653,191 rps
+✔ Publish to a nested topic with subscribers on topic chain                        8,622,035 rps
+✔ Publish to a nested topic with subscribers and middleware on topic chain         8,557,189 rps
 
 Suite: Asynchronous cases
-✔ Direct observer callback                                                            3,495,022 rps
-✔ Publish to the root topic with one subscriber                                       2,768,843 rps
-✔ Publishing to a nested topic with one subscriber                                    2,654,318 rps
-✔ Publishing to a nested topic with subscribers on topic chain                        2,283,484 rps
-✔ Publishing to a nested topic with subscribers and middleware on topic chain         2,300,750 rps
+✔ Direct observer callback                                                         3,495,022 rps
+✔ Publish to the root topic with one subscriber                                    2,768,843 rps
+✔ Publish to a nested topic with one subscriber                                    2,654,318 rps
+✔ Publish to a nested topic with subscribers on topic chain                        2,283,484 rps
+✔ Publish to a nested topic with subscribers and middleware on topic chain         2,300,750 rps
 ```
 
 # How small?
@@ -107,12 +107,12 @@ The callback will be called for publications on this topic as well as all subtop
 ```js
 // Creates three nested topics each with it's list of subscribers and middleware.
 topics('foo.bar.baz')
-  .subscribe((message, meta) => { /* do something  */ })
+  .subscribe((message, meta, path) => { /* do something  */ })
 ```
 ### Arguments
 Parameter | Default     | Description
 -------- | ----------- | -----------
-`callback`   |  | `(message, meta) => { /* ... */ }` the callback gets the published message as well as a meta object that contains a unique `contextId`, the current publication `path`, the `originalPath` on which the message was published. Other properties may also have been added by middleware functions.
+`callback`   |  | `(message, meta) => { /* ... */ }` the callback gets the published message as well as a meta object that contains a unique `contextId`, the `originalPath` on which the message was published. Other properties may also have been added by middleware functions.
 
 
 
@@ -122,7 +122,7 @@ Similar to subscribe but will automatically unsubscribe after having received th
 ```js
 // Creates three nested topics each with it's list of subscribers and middleware.
 topics('foo.bar.baz')
-  .subscribeOnce((message, meta) => { /* do something  */ })
+  .subscribeOnce((message, meta, path) => { /* do something  */ })
 ```
 ### Arguments
 Parameter | Default     | Description
