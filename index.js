@@ -4,9 +4,6 @@
 module.exports = Topic
 
 
-const SLOW_POST_THRESHOLD = 16,
-      NULL_POST = () => {}
-
 function Topic() {
   return makeContext('').topic
 }
@@ -85,7 +82,7 @@ function makeTopic(context, path) {
   topic.once         = subscribeOnce.bind(context)
   topic.publishSync  = publishSync.bind(context)
   topic.publishAsync = publishAsync.bind(context)
-  topic.publish      = topic.publishAsync
+  topic.publish      = publish.bind(context)
   topic.unsubscribe  = unsubscribe.bind(context)
   topic.subtopic     = subtopic.bind(context)
   topic.clear        = clear.bind(context)
@@ -224,7 +221,7 @@ function postSync(payload, meta) {
 
 // ----------------------------------------------------------------------------
 //
-// PRIVATE (NOT USED)
+// PRIVATE
 //
 // Actually loops through the subscribers (both "once" and "regular") and  
 // will call the subscriptions in the next event loop by way of setTimeout. 
@@ -232,32 +229,7 @@ function postSync(payload, meta) {
 // ----------------------------------------------------------------------------
 
 function postAsync(payload, meta) {
-
-  let context = this
-
-  while (context) {
-    
-    const 
-      parent = context.parent, 
-      once   = context.once, 
-      subs   = context.subscriptions,
-      path   = context.path
-
-    if (once.length) {
-      const n1 = once.length
-      for (let i=0;  i<n1;  i++)
-        setTimeout(() => { once[i](payload, meta, path) }, 0)
-      context.once = []
-    }
-
-    if (subs.length) {
-      const n2 = subs.length
-      for (let i=0;  i<n2;  i++)
-        setTimeout(() => { subs[i](payload, meta, path) }, 0)
-    }
-    
-    context = parent
-  }
+  setTimeout(() => { this.postSync(payload, meta) }, 0)
 }
 
 
@@ -297,10 +269,9 @@ function publishAsync(payload) {
   const meta = {
     contextId:    this.counter++,
     originalPath: this.path,
-    async:        false
+    async:        true
   }
   setTimeout(() => this.middleware(payload, meta), 0)
-  //this.middleware(payload, meta)
   return this.topic
 }
 
@@ -312,6 +283,12 @@ function publishSync(payload) {
   }
   this.middleware(payload, meta)
   return this.topic
+}
+
+function publish(payload, async=true) {
+  return async? 
+    this.topic.publishAsync(payload) :
+    this.topic.publishSync(payload)
 }
 
 function unsubscribe(...callbacks) {

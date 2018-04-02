@@ -10,7 +10,6 @@ function accumulator() {
   return func
 }
 
-
 test('It should subscribe and receive messages', () => {
 
   const accu  = accumulator(),
@@ -78,6 +77,7 @@ test('It should not publish to subtopics', () => {
 test('It should publish asynchronously to the topic and all parent topics', done => {
 
   const accu  = accumulator(),
+        accu2 = accumulator(),
         topic = Topic()
 
   topic('foo')
@@ -88,6 +88,7 @@ test('It should publish asynchronously to the topic and all parent topics', done
 
   topic('foo.bar.baz')
     .subscribe(accu)
+    .once(accu2)
     .publishAsync('hello')
     .publishAsync('world')
 
@@ -96,12 +97,35 @@ test('It should publish asynchronously to the topic and all parent topics', done
       'foo.bar.baz', 'foo.bar', 'foo',
       'foo.bar.baz', 'foo.bar', 'foo',
     ])
+    expect(accu2.value()).toEqual([
+      'foo.bar.baz'
+    ])
     done()
-  }, 200)
+  }, 500)
 
   expect(accu.value()).toEqual([])
 })
 
+
+
+test('It should publish according to the async argument', done => {
+  
+  const accu  = accumulator(),
+        topic = Topic()
+
+  topic('foo')
+    .subscribe(accu)
+    .publish('hello', false)
+    .publish('world', true)
+    .publish('foo')
+
+  expect(accu.value()).toEqual(['foo'])
+
+  setTimeout(() => {
+    expect(accu.value()).toEqual(['foo','foo','foo'])
+    done()
+  }, 200)
+})
 
 
 test('It should unsubscribe only the specified callback', () => {
