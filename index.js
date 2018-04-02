@@ -26,6 +26,7 @@ function makeContext(name, parent) {
   const context = {    
     parent,
     path,
+    pending:[],
     subscriptions: [],
     once:[],
     hasOnce: false,
@@ -38,8 +39,6 @@ function makeContext(name, parent) {
   context.recomputeMiddlewareSubtree = recomputeMiddlewareSubtree.bind(context)
   context.composeMiddleware = composeMiddleware.bind(context)
   context.post = post.bind(context)
-  context.postSync = postSync.bind(context)
-  context.postAsync = postAsync.bind(context)
   context.topic = makeTopic(context,path)
   
   context.recomputeMiddlewareSubtree()
@@ -169,27 +168,13 @@ function composeMiddleware(wares) {
 //
 // PRIVATE
 //
-// Delegates the actual posting of the message to postSync or postsAsync
-//
-// ----------------------------------------------------------------------------
-
-function post(payload, meta) {
-  return meta.async? this.postAsync(payload,meta) : this.postSync(payload,meta)
-}
-
-
-
-// ----------------------------------------------------------------------------
-//
-// PRIVATE
-//
 // When the number of subscribers grows, we don't use function composition 
 // anymore. Instead, we just loop through the subscribers and call each one 
 // in turn. 
 //
 // ----------------------------------------------------------------------------
 
-function postSync(payload, meta) {
+function post(payload, meta) {
 
   let context = this
 
@@ -217,22 +202,6 @@ function postSync(payload, meta) {
     context = parent
   }
 }
-
-
-// ----------------------------------------------------------------------------
-//
-// PRIVATE
-//
-// Actually loops through the subscribers (both "once" and "regular") and  
-// will call the subscriptions in the next event loop by way of setTimeout. 
-//
-// ----------------------------------------------------------------------------
-
-function postAsync(payload, meta) {
-  setTimeout(() => { this.postSync(payload, meta) }, 0)
-}
-
-
 
 
 
@@ -266,12 +235,27 @@ function subscribeOnce(...callbacks) {
 }
 
 function publishAsync(payload) {
+  
   const meta = {
     contextId:    this.counter++,
     originalPath: this.path,
     async:        true
   }
-  setTimeout(() => this.middleware(payload, meta), 0)
+
+  this.pending.push([payload, meta])
+  if (this.pending.length === 1) {
+    setTimeout(() => {
+      
+      const pairs  = this.pending
+      this.pending = []
+
+      for (let i=0;  i<pairs.length;  i++) {
+        const [p, m] = pairs[i]
+        this.middleware(p, m)  
+      }      
+    }, 0)
+  }
+
   return this.topic
 }
 
