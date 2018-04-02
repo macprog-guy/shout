@@ -1,7 +1,7 @@
 {
   "name": "subcast",
   "description": "Fast, small and dependency-free topic based publish/subscribe library for the browser or nodejs",
-  "version": "0.5.6",
+  "version": "0.5.7",
   "main": "index.js",
   "directories": {
     "test": "test"
