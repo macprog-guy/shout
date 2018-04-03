@@ -19,18 +19,19 @@ Platform info:
    Intel(R) Core(TM) i7-4850HQ CPU @ 2.30GHz × 8
 
 Suite: Synchronous cases
-✔ Direct observer callback                                                        82,763,345 rps
-✔ Publish to the root topic with one subscriber                                   33,304,908 rps
-✔ Publish to a nested topic with one subscriber                                   19,653,191 rps
-✔ Publish to a nested topic with subscribers on topic chain                        8,622,035 rps
-✔ Publish to a nested topic with subscribers and middleware on topic chain         8,557,189 rps
+✔ Direct observer callback                                                           71,882,134 rps
+✔ Publish to the root topic with one subscriber                                      41,932,809 rps
+✔ Publishing to a nested topic with one subscriber                                   28,820,501 rps
+✔ Publishing to a nested topic with subscribers on topic chain                       17,219,133 rps
+✔ Publishing to a nested topic with subscribers and middleware on topic chain        17,374,707 rps
 
-Suite: Asynchronous cases
-✔ Direct observer callback                                                         3,495,022 rps
-✔ Publish to the root topic with one subscriber                                    2,768,843 rps
-✔ Publish to a nested topic with one subscriber                                    2,654,318 rps
-✔ Publish to a nested topic with subscribers on topic chain                        2,283,484 rps
-✔ Publish to a nested topic with subscribers and middleware on topic chain         2,300,750 rps
+
+Suite: Asynchronous cases 
+✔ Direct observer callback                                                            3,527,308 rps
+✔ Publish to the root topic with one subscriber                                      14,678,458 rps
+✔ Publishing to a nested topic with one subscriber                                   11,500,708 rps
+✔ Publishing to a nested topic with subscribers on topic chain                        9,446,315 rps
+✔ Publishing to a nested topic with subscribers and middleware on topic chain         7,759,429 rps
 ```
 
 # How small?
